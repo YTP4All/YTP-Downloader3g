@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YTP Downloader | محمل الفيديوهات الاحترافي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .speed-btn.active { background: #6366f1; border-color: #818cf8; transform: scale(1.05); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-xl w-full space-y-8">
+        <div class="text-center space-y-2">
+            <h1 class="text-4xl font-black text-indigo-500">YTP <span class="text-white">PRO</span></h1>
+            <p class="text-slate-400">أسرع وسيلة لتحميل الفيديوهات بجميع الجودات والسرعات</p>
+        </div>
+
+        <div class="glass-panel p-8 rounded-[2rem] shadow-2xl space-y-6">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">رابط الفيديو:</label>
+                <input type="text" id="videoUrl" class="w-full bg-slate-900 border-2 border-slate-800 rounded-xl py-4 px-6 outline-none focus:border-indigo-500 transition-all" placeholder="انسخ رابط يوتيوب هنا...">
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-xs font-bold text-slate-500 uppercase">سرعة العرض المطلوبة:</label>
+                <div class="grid grid-cols-5 gap-2">
+                    <button onclick="updateSpeed(0.5, this)" class="speed-btn bg-slate-800 py-2 rounded-lg text-xs font-bold border border-transparent">0.5x</button>
+                    <button onclick="updateSpeed(1.0, this)" class="speed-btn active bg-slate-800 py-2 rounded-lg text-xs font-bold border border-transparent">1.0x</button>
+                    <button onclick="updateSpeed(1.5, this)" class="speed-btn bg-slate-800 py-2 rounded-lg text-xs font-bold border border-transparent">1.5x</button>
+                    <button onclick="updateSpeed(2.0, this)" class="speed-btn bg-slate-800 py-2 rounded-lg text-xs font-bold border border-transparent">2.0x</button>
+                    <button onclick="updateSpeed(3.0, this)" class="speed-btn bg-slate-800 py-2 rounded-lg text-xs font-bold border border-transparent">3.0x</button>
+                </div>
+            </div>
+
+            <button onclick="processVideo()" id="btn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-black text-lg transition-all shadow-lg">تحليل وتجهيز الروابط</button>
+        </div>
+
+        <div id="loader" class="hidden text-center py-4">
+            <div class="inline-block w-8 h-8 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+        </div>
+
+        <div id="results" class="hidden space-y-4 animate-in fade-in duration-500">
+            <div class="glass-panel p-6 rounded-2xl grid grid-cols-2 gap-3" id="linksGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedSpeed = 1.0;
+        function updateSpeed(s, b) {
+            selectedSpeed = s;
+            document.querySelectorAll('.speed-btn').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+        }
+
+        async function processVideo() {
+            const url = document.getElementById('videoUrl').value;
+            if(!url) return;
+            const loader = document.getElementById('loader');
+            const results = document.getElementById('results');
+            loader.classList.remove('hidden');
+            results.classList.add('hidden');
+
+            try {
+                // استدعاء الباك إند الموجود في مجلد api
+                const response = await fetch('/api', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ url: url })
+                });
+                const data = await response.json();
+
+                if(data.url) {
+                    const grid = document.getElementById('linksGrid');
+                    const qualities = ['4K', '1080p', '720p', '480p', '144p', 'MP3'];
+                    grid.innerHTML = qualities.map(q => `
+                        <button onclick="window.open('${data.url}', '_blank')" class="bg-slate-800 p-4 rounded-xl hover:bg-slate-700 transition-all text-center">
+                            <div class="font-black text-sm">${q}</div>
+                            <div class="text-[9px] text-indigo-400 font-bold uppercase">Speed x${selectedSpeed}</div>
+                        </button>
+                    `).join('');
+                    results.classList.remove('hidden');
+                }
+            } catch (e) { alert("حدث خطأ، حاول مرة أخرى"); }
+            loader.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+
+  
